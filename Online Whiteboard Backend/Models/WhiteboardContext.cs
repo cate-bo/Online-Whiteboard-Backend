@@ -8,14 +8,12 @@ namespace Online_Whiteboard_Backend.Models;
 
 public partial class WhiteboardContext : DbContext
 {
-    public WhiteboardContext()
-    {
-    }
-
     public WhiteboardContext(DbContextOptions<WhiteboardContext> options)
         : base(options)
     {
     }
+
+    public virtual DbSet<AspNetUsers> AspNetUsers { get; set; }
 
     public virtual DbSet<Bild> Bild { get; set; }
 
@@ -25,12 +23,22 @@ public partial class WhiteboardContext : DbContext
 
     public virtual DbSet<Whiteboard> Whiteboard { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=clarification-wriggly.with.playit.plus,1044;Initial Catalog=Whiteboard;Persist Security Info=True;User ID=Cate;Password=tein5252;Encrypt=True");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AspNetUsers>(entity =>
+        {
+            entity.HasIndex(e => e.NormalizedEmail, "EmailIndex");
+
+            entity.HasIndex(e => e.NormalizedUserName, "UserNameIndex")
+                .IsUnique()
+                .HasFilter("([NormalizedUserName] IS NOT NULL)");
+
+            entity.Property(e => e.Email).HasMaxLength(256);
+            entity.Property(e => e.NormalizedEmail).HasMaxLength(256);
+            entity.Property(e => e.NormalizedUserName).HasMaxLength(256);
+            entity.Property(e => e.UserName).HasMaxLength(256);
+        });
+
         modelBuilder.Entity<Bild>(entity =>
         {
             entity.HasKey(e => e.BilIdPk);
@@ -53,6 +61,8 @@ public partial class WhiteboardContext : DbContext
         {
             entity.HasKey(e => e.NutIdPk);
 
+            entity.HasIndex(e => e.NutAspUserIdFk, "UQ_AspUserId").IsUnique();
+
             entity.Property(e => e.NutIdPk).HasColumnName("nutIdPK");
             entity.Property(e => e.NutAnzeigename)
                 .IsRequired()
@@ -60,8 +70,12 @@ public partial class WhiteboardContext : DbContext
                 .HasColumnName("nutAnzeigename");
             entity.Property(e => e.NutAspUserIdFk)
                 .IsRequired()
-                .HasMaxLength(450)
                 .HasColumnName("nutAspUserIdFK");
+
+            entity.HasOne(d => d.NutAspUserIdFkNavigation).WithOne(p => p.Nutzer)
+                .HasForeignKey<Nutzer>(d => d.NutAspUserIdFk)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Nutzer_AspNetUsers");
 
             entity.HasMany(d => d.BeaWhiteboardIdFk).WithMany(p => p.BeaNutzerIdFk)
                 .UsingEntity<Dictionary<string, object>>(

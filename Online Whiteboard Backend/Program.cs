@@ -60,6 +60,9 @@ namespace Online_Whiteboard_Backend
             }
             );
 
+            builder.Services.AddSignalR();
+
+            builder.Services.AddSingleton<WhiteboardStatemachine>();
 
             var app = builder.Build();
 

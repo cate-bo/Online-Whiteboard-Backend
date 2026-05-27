@@ -3,7 +3,7 @@
    "ContextClassName": "WhiteboardContext",
    "ContextNamespace": null,
    "FilterSchemas": false,
-   "IncludeConnectionString": true,
+   "IncludeConnectionString": false,
    "ModelNamespace": null,
    "OutputContextPath": null,
    "OutputPath": "Models",
@@ -14,6 +14,10 @@
    "SelectedToBeGenerated": 0,
    "T4TemplatePath": null,
    "Tables": [
+      {
+         "Name": "[dbo].[AspNetUsers]",
+         "ObjectType": 0
+      },
       {
          "Name": "[dbo].[Bearbeitungsberechtigung]",
          "ObjectType": 0

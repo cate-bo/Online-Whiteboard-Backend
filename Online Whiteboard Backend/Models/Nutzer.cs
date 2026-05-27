@@ -13,6 +13,8 @@ public partial class Nutzer
 
     public string NutAnzeigename { get; set; }
 
+    public virtual AspNetUsers NutAspUserIdFkNavigation { get; set; }
+
     public virtual ICollection<Whiteboard> Whiteboard { get; set; } = new List<Whiteboard>();
 
     public virtual ICollection<Whiteboard> BeaWhiteboardIdFk { get; set; } = new List<Whiteboard>();
