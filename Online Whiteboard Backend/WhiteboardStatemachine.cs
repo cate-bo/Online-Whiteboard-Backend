@@ -2,6 +2,7 @@
 {
     public class WhiteboardStatemachine 
     {
+
         private int _bla = 0;
         public int GiveBla()
         {

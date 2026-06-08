@@ -26,8 +26,18 @@ namespace Online_Whiteboard_Backend
 
             builder.Services.AddAuthorization();
 
+            //builder.Services.AddIdentityCore<IdentityUser>(options =>
+            //{
+            //    options.Password.RequireDigit = true;
+            //    options.Password.RequireLowercase = true;
+            //    options.Password.RequireUppercase = true;
+            //    options.Password.RequireNonAlphanumeric = true;
+            //    options.Password.RequiredLength = 6;
+            //}).AddEntityFrameworkStores<ApplicationDbContext>();
+
             builder.Services.AddIdentityApiEndpoints<IdentityUser>()
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddSignInManager<CustomSignInManager>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -66,7 +76,7 @@ namespace Online_Whiteboard_Backend
 
             var app = builder.Build();
 
-            app.MapIdentityApi<IdentityUser>();
+            app.MapCustomIdentityApi<IdentityUser>();
 
             app.MapPost("/logout", async (SignInManager<IdentityUser> signInManager, [FromBody] object empty) =>
             {
