@@ -17,5 +17,18 @@ namespace Online_Whiteboard_Backend
         {
             
         }
+
+        public async override Task<SignInResult> PasswordSignInAsync(string userName, string password, bool isPersistent, bool lockoutOnFailure)
+        {
+            var user = await UserManager.FindByEmailAsync(userName);
+            if (user != null)
+            {
+                return await PasswordSignInAsync(user, password, isPersistent, lockoutOnFailure);
+            }
+            else
+            {
+                return SignInResult.Failed;
+            }
+        }
     }
 }

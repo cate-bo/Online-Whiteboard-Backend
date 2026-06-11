@@ -1,9 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Text.Encodings.Web;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +11,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NuGet.Protocol;
 using Online_Whiteboard_Backend.Models;
+using System.Buffers;
+using System.Collections;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Encodings.Web;
 
 namespace Online_Whiteboard_Backend
 {
@@ -75,7 +79,7 @@ namespace Online_Whiteboard_Backend
                 }
 
                 var user = new TUser();
-                await userStore.SetUserNameAsync(user, email, CancellationToken.None);
+                await userStore.SetUserNameAsync(user, registration.Username, CancellationToken.None);
                 await emailStore.SetEmailAsync(user, email, CancellationToken.None);
                 var result = await userManager.CreateAsync(user, registration.Password);
                 //create Nutzer if identity creation succeeded
@@ -106,37 +110,73 @@ namespace Online_Whiteboard_Backend
                 return TypedResults.Ok();
             });
 
-            routeGroup.MapPost("/login", async Task<Results<Ok<CustomAccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>>
-                ([FromBody] LoginRequest login,/* [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, */[FromServices] IServiceProvider sp) =>
+            routeGroup.MapPost("/login", async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>>
+                ([FromBody] LoginRequest login, /* [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, */[FromServices] IServiceProvider sp) =>
             {
-                var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
 
-                //var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
-                //var isPersistent = (useCookies == true) && (useSessionCookies != true);
+                UserManager<TUser> usermanager = sp.GetRequiredService<UserManager<TUser>>();
+
+                var context = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;
+
+
+                TUser? user = await usermanager.FindByEmailAsync(login.Email);
+
+                if (user == null)
+                {
+                    return TypedResults.Problem();
+                }
+
+                context.Response.Headers.Add("name", (user as IdentityUser).UserName);
+
+
+
+                var signInManager = sp.GetRequiredService<CustomSignInManager<TUser>>();
+
+                ////var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
+                ////var isPersistent = (useCookies == true) && (useSessionCookies != true);
                 signInManager.AuthenticationScheme =/* useCookieScheme ? IdentityConstants.ApplicationScheme : */IdentityConstants.BearerScheme;
 
                 var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, false, lockoutOnFailure: false);
+                
 
-                //if (result.RequiresTwoFactor)
-                //{
-                //    if (!string.IsNullOrEmpty(login.TwoFactorCode))
-                //    {
-                //        result = await signInManager.TwoFactorAuthenticatorSignInAsync(login.TwoFactorCode, isPersistent, rememberClient: isPersistent);
-                //    }
-                //    else if (!string.IsNullOrEmpty(login.TwoFactorRecoveryCode))
-                //    {
-                //        result = await signInManager.TwoFactorRecoveryCodeSignInAsync(login.TwoFactorRecoveryCode);
-                //    }
-                //}
+                ////if (result.RequiresTwoFactor)
+                ////{
+                ////    if (!string.IsNullOrEmpty(login.TwoFactorCode))
+                ////    {
+                ////        result = await signInManager.TwoFactorAuthenticatorSignInAsync(login.TwoFactorCode, isPersistent, rememberClient: isPersistent);
+                ////    }
+                ////    else if (!string.IsNullOrEmpty(login.TwoFactorRecoveryCode))
+                ////    {
+                ////        result = await signInManager.TwoFactorRecoveryCodeSignInAsync(login.TwoFactorRecoveryCode);
+                ////    }
+                ////}
 
                 if (!result.Succeeded)
                 {
                     return TypedResults.Problem(result.ToString(), statusCode: StatusCodes.Status401Unauthorized);
                 }
-                Console.WriteLine("------------------------------------------------------");
-                Console.WriteLine(result.ToJson());
-                Console.WriteLine("------------------------------------------------------");
-                // The signInManager already produced the needed response in the form of a cookie or bearer token.
+
+
+                //var tokenHandler = new JwtSecurityTokenHandler();
+                //context.Response.BodyWriter.Write<byte>(Encoding.UTF8.GetBytes(context.User.Identity.Name.ToJson()));
+
+                //var body_stream = context.Response.Body;
+                //string body = "";
+                //if (body_stream.CanRead)
+                //{
+                //    byte[] buffer = new byte[1024];
+                //    while (await body_stream.ReadAsync(buffer, 0, buffer.Length) != 0)
+                //    {
+                //        body += System.Text.Encoding.UTF8.GetString(buffer);
+                //    }
+                //}
+                //Console.WriteLine(body);
+
+
+                //Console.WriteLine("------------------------------------------------------");
+                //Console.WriteLine(result.ToJson());
+                //Console.WriteLine("------------------------------------------------------");
+                //// The signInManager already produced the needed response in the form of a cookie or bearer token.
                 return TypedResults.Empty;
             });
 

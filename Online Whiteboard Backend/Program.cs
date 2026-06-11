@@ -1,4 +1,6 @@
 
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +16,10 @@ namespace Online_Whiteboard_Backend
         {
             var builder = WebApplication.CreateBuilder(args);
 
+
+
             // Add services to the container.
+
 
             var connectionString = builder.Configuration["DefaultConnection"];
 
@@ -24,7 +29,6 @@ namespace Online_Whiteboard_Backend
             builder.Services.AddDbContext<WhiteboardContext>(options =>
                options.UseSqlServer(connectionString));
 
-            builder.Services.AddAuthorization();
 
             //builder.Services.AddIdentityCore<IdentityUser>(options =>
             //{
@@ -34,10 +38,19 @@ namespace Online_Whiteboard_Backend
             //    options.Password.RequireNonAlphanumeric = true;
             //    options.Password.RequiredLength = 6;
             //}).AddEntityFrameworkStores<ApplicationDbContext>();
+            builder.Services.AddHttpContextAccessor();
 
-            builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+            builder.Services.AddAuthorization();
+
+
+            builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.User.RequireUniqueEmail = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddSignInManager<CustomSignInManager>();
+                .AddSignInManager<CustomSignInManager<IdentityUser>>();
+
+
+            builder.Services.AddAuthentication();
+
+            //builder.Services.AddAuthenticationCore();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -76,6 +89,7 @@ namespace Online_Whiteboard_Backend
 
             var app = builder.Build();
 
+
             app.MapCustomIdentityApi<IdentityUser>();
 
             app.MapPost("/logout", async (SignInManager<IdentityUser> signInManager, [FromBody] object empty) =>
@@ -97,6 +111,8 @@ namespace Online_Whiteboard_Backend
 
             app.UseHttpsRedirection();
 
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
