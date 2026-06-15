@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using NuGet.Protocol;
 using Online_Whiteboard_Backend.Models;
 using System.Buffers;
@@ -59,7 +60,7 @@ namespace Online_Whiteboard_Backend
 
             // NOTE: We cannot inject UserManager<TUser> directly because the TUser generic parameter is currently unsupported by RDG.
             // https://github.com/dotnet/aspnetcore/issues/47338
-            routeGroup.MapPost("/register", async Task<Results<Ok, ValidationProblem>>
+            routeGroup.MapPost("/register", async Task<Results<Ok<AccessTokenResponse>, ValidationProblem, EmptyHttpResult>>
                 ([FromBody] CustomRegisterRequest registration, HttpContext context, [FromServices] IServiceProvider sp) =>
             {
                 var userManager = sp.GetRequiredService<UserManager<TUser>>();
@@ -79,7 +80,7 @@ namespace Online_Whiteboard_Backend
                 }
 
                 var user = new TUser();
-                await userStore.SetUserNameAsync(user, registration.Username, CancellationToken.None);
+                await userStore.SetUserNameAsync(user, email, CancellationToken.None);
                 await emailStore.SetEmailAsync(user, email, CancellationToken.None);
                 var result = await userManager.CreateAsync(user, registration.Password);
                 //create Nutzer if identity creation succeeded
@@ -90,13 +91,15 @@ namespace Online_Whiteboard_Backend
                     nutzer.NutAnzeigename = registration.Username;
                     try
                     {
-                        nutzer.NutAspUserIdFkNavigation = user as AspNetUsers;
+                        //nutzer.NutAspUserIdFkNavigation = user as AspNetUsers;
+                        nutzer.NutAspUserIdFk = await userStore.GetUserIdAsync(user, CancellationToken.None);
                         whiteboard_context.Add(nutzer);
                         await whiteboard_context.SaveChangesAsync();
                     }catch (Exception ex)
                     {
                         whiteboard_context.Remove(nutzer);
-                        userManager.DeleteAsync(user);
+                        await whiteboard_context.SaveChangesAsync();
+                        await userManager.DeleteAsync(user);
                         return CreateValidationProblem("error", "something went wrong");
                     }
                 }else
@@ -104,10 +107,17 @@ namespace Online_Whiteboard_Backend
                     return CreateValidationProblem(result);
                 }
 
+                context.Response.Headers.Add("name", registration.Username);
 
+                //await SendConfirmationEmailAsync(user, userManager, context, email);
+                var signInManager = sp.GetRequiredService<CustomSignInManager<TUser>>();
 
-                await SendConfirmationEmailAsync(user, userManager, context, email);
-                return TypedResults.Ok();
+                ////var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
+                ////var isPersistent = (useCookies == true) && (useSessionCookies != true);
+                signInManager.AuthenticationScheme =/* useCookieScheme ? IdentityConstants.ApplicationScheme : */IdentityConstants.BearerScheme;
+
+                await signInManager.PasswordSignInAsync(registration.Email, registration.Password, false, lockoutOnFailure: false);
+                return TypedResults.Empty;
             });
 
             routeGroup.MapPost("/login", async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>>

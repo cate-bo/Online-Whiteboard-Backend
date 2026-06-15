@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,6 +22,14 @@ namespace Online_Whiteboard_Backend.Controllers
         public ActionResult<int> Get()
         {
             return _statemachine.GiveBla();
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<ActionResult<int>> Post([FromBody] CreateWhiteboardRequest request)
+        {
+            await _statemachine.CreateWhiteboard(request.Name, request.IsPublic);
+            return 0;
         }
     }
 }

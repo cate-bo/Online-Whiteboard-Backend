@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi.Models;
+using Online_Whiteboard_Backend.Hubs;
 using Online_Whiteboard_Backend.Models;
 
 namespace Online_Whiteboard_Backend
@@ -117,6 +119,8 @@ namespace Online_Whiteboard_Backend
 
 
             app.MapControllers();
+
+            app.MapHub<WhiteboardHub>("/board");
 
             app.Run();
         }
