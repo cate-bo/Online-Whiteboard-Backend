@@ -1,6 +1,7 @@
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ namespace Online_Whiteboard_Backend
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            string hubPath = "/socket";
 
 
             // Add services to the container.
@@ -50,7 +52,25 @@ namespace Online_Whiteboard_Backend
                 .AddSignInManager<CustomSignInManager<IdentityUser>>();
 
 
-            builder.Services.AddAuthentication();
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken) && context.HttpContext.Request.Path.StartsWithSegments(hubPath))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
+            });
 
             //builder.Services.AddAuthenticationCore();
 
@@ -120,7 +140,7 @@ namespace Online_Whiteboard_Backend
 
             app.MapControllers();
 
-            app.MapHub<WhiteboardHub>("/board");
+            app.MapHub<WhiteboardHub>(hubPath);
 
             app.Run();
         }
