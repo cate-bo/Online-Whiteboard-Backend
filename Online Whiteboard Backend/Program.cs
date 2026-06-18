@@ -105,9 +105,15 @@ namespace Online_Whiteboard_Backend
             }
             );
 
-            builder.Services.AddSignalR();
+            builder.Services.AddSignalR(options =>
+            {
+                Console.WriteLine(options.SupportedProtocols[0]);
+            });
+
 
             builder.Services.AddSingleton<WhiteboardStatemachine>();
+
+            builder.Services.AddLogging();
 
             var app = builder.Build();
 

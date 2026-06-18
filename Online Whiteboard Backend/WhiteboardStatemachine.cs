@@ -11,11 +11,13 @@ namespace Online_Whiteboard_Backend
 
         private readonly IHttpContextAccessor _httpContext;
         private readonly IServiceProvider _sp;
+        private List<Whiteboard> openWhiteboards;
 
         public WhiteboardStatemachine(IHttpContextAccessor httpContext, IServiceProvider sp)
         {
             _httpContext = httpContext;
             _sp = sp;
+            openWhiteboards = new List<Whiteboard>();
         }
         private int _bla = 0;
         public int GiveBla()
@@ -51,6 +53,11 @@ namespace Online_Whiteboard_Backend
                 }
             }
             return boardID;
+        }
+
+        public async Task OpenWhiteboard()
+        {
+            //call this from open whiteboard hub method
         }
     }
 }
