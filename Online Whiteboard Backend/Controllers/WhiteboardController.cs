@@ -26,8 +26,9 @@ namespace Online_Whiteboard_Backend.Controllers
         }
 
         [HttpGet]
-        public ActionResult<int> Get()
+        public ActionResult<List<(int id, string name)>> Get()
         {
+
             return _statemachine.GiveBla();
         }
 
