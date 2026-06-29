@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Online_Whiteboard_Backend.Models;
 using System.Drawing;
@@ -27,9 +29,9 @@ namespace Online_Whiteboard_Backend
             return _bla;
         }
 
-        public async Task<int> CreateWhiteboard(string name, bool isPublic, AspNetUsers user)
+        public async Task<IdAndNameWrapper> CreateWhiteboard(string name, bool isPublic, AspNetUsers user)
         {
-            int boardID = 0;
+            IdAndNameWrapper newBoard = new IdAndNameWrapper();
             using (var scope = _sp.CreateScope())
             {
                 var whiteboardContext = scope.ServiceProvider.GetRequiredService<WhiteboardContext>();
@@ -46,14 +48,15 @@ namespace Online_Whiteboard_Backend
                 {
                     await whiteboardContext.SaveChangesAsync();
                     Console.WriteLine(board.WhiIdPk);
-                    boardID = board.WhiIdPk;
+                    newBoard.Name = board.WhiName;
+                    newBoard.Id = board.WhiIdPk;
                 }
                 catch (Exception ex)
                 {
-
+                    newBoard.Id = 0;
                 }
             }
-            return boardID;
+            return newBoard;
         }
 
         public async Task<bool> OpenWhiteboard(int whiteboardId, AspNetUsers user, string connectionId)

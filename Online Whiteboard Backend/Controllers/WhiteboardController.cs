@@ -53,12 +53,19 @@ namespace Online_Whiteboard_Backend.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<int>> Post([FromBody] CreateWhiteboardRequest request)
+        public async Task<ActionResult<IdAndNameWrapper>> Post([FromBody] CreateWhiteboardRequest request)
         {
             string id = _userManager.GetUserId(_httpContextAccessor.HttpContext.User);
             AspNetUsers user = _context.AspNetUsers.Where(u => u.Id == id).Include(u => u.Nutzer).First();
-            await _statemachine.CreateWhiteboard(request.Name, request.IsPublic, user);
-            return 0;
+            IdAndNameWrapper newBoard = await _statemachine.CreateWhiteboard(request.Name, request.IsPublic, user);
+            if (newBoard.Id == 0)
+            {
+                return BadRequest();
+            }
+            else
+            {
+                return newBoard;
+            }
         }
 
 
