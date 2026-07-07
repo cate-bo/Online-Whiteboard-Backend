@@ -63,7 +63,8 @@ namespace Online_Whiteboard_Backend
         {
             Whiteboard board = GetWhiteboard(whiteboardId);
             await CloseWhiteboard(connectionId);
-            _openWhiteboards.TryAdd(board, new WhiteboardConnectionsWrapper());
+            //_openWhiteboards.TryAdd(board, new WhiteboardConnectionsWrapper());
+            var thing = _openWhiteboards[board];
             if (user.Nutzer == board.WhiBesitzerIdFkNavigation)
             {
                 _openWhiteboards[board].ConnectOwner(connectionId);

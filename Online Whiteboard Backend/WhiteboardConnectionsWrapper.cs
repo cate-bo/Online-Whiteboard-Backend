@@ -4,8 +4,8 @@ namespace Online_Whiteboard_Backend
 {
     public class WhiteboardConnectionsWrapper
     {
-        private string? _owner;
-        private List<string> _editors;
+        private (string connectionId, UserWrapper)? _owner;
+        private Dictionary<string, UserWrapper> _editors;
         private List<string> _viewers;
 
         public bool HasConnections
@@ -23,15 +23,19 @@ namespace Online_Whiteboard_Backend
         {
             get
             {
-                List<string> temp = _editors.Concat(_viewers).ToList();
-                if(_owner != null) temp.Add(_owner);
+                List<string> temp = _viewers;
+                foreach(var thing in _editors)
+                {
+                    temp.Add(thing.Key);
+                }
+                if(_owner != null) temp.Add(_owner.Value.connectionId);
                 return temp;
             }
         }
 
         public WhiteboardConnectionsWrapper()
         {
-            _editors = new List<string>();
+            _editors = new Dictionary<string, UserWrapper>();
             _viewers = new List<string>();
         }
 

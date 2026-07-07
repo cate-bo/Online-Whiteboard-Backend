@@ -36,7 +36,7 @@ namespace Online_Whiteboard_Backend.Hubs
             {
                 string user_id = _userManager.GetUserId(Context.User);
                 AspNetUsers user = _context.AspNetUsers.Where(u => u.Id == user_id).Include(u => u.Nutzer).First();
-                 success = await _statemachine.OpenWhiteboard(id, user, Context.ConnectionId);
+                success = await _statemachine.OpenWhiteboard(id, user, Context.ConnectionId);
             }
             else
             {
