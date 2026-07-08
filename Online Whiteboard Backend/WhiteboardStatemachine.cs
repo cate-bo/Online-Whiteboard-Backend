@@ -14,13 +14,13 @@ namespace Online_Whiteboard_Backend
 
         private readonly IHttpContextAccessor _httpContext;
         private readonly IServiceProvider _sp;
-        private Dictionary<Whiteboard, WhiteboardConnectionsWrapper> _openWhiteboards;
+        private Dictionary<int, WhiteboardState> _openWhiteboards;
 
         public WhiteboardStatemachine(IHttpContextAccessor httpContext, IServiceProvider sp)
         {
             _httpContext = httpContext;
             _sp = sp;
-            _openWhiteboards = new Dictionary<Whiteboard, WhiteboardConnectionsWrapper>();
+            _openWhiteboards = new Dictionary<int, WhiteboardState>();
         }
         private int _bla = 0;
         public int GiveBla()
@@ -59,47 +59,22 @@ namespace Online_Whiteboard_Backend
             return newBoard;
         }
 
-        public async Task<bool> OpenWhiteboard(int whiteboardId, AspNetUsers user, string connectionId)
+        public async Task<OpenWhiteboardResponse> ConnectToWhiteboard(Whiteboard board, AspNetUsers? user, string connectionId)
         {
-            Whiteboard board = GetWhiteboard(whiteboardId);
             await CloseWhiteboard(connectionId);
             //_openWhiteboards.TryAdd(board, new WhiteboardConnectionsWrapper());
-            var thing = _openWhiteboards[board];
-            if (user.Nutzer == board.WhiBesitzerIdFkNavigation)
+            board = GetWhiteboard(board.WhiIdPk);
+            if (_openWhiteboards[board.WhiIdPk] == null)
             {
-                _openWhiteboards[board].ConnectOwner(connectionId);
-                return true;
+                _openWhiteboards[board.WhiIdPk] = new WhiteboardState(board);
             }
-            else if (board.BeaNutzerIdFk.Contains(user.Nutzer))
-            {
-                _openWhiteboards[board].ConnectEditor(connectionId);
-                return true;
-            }
-            else
-            {
-                return await OpenWhiteboard(whiteboardId, connectionId);
-            }
-        }
 
-        public async Task<bool> OpenWhiteboard(int whiteboardId, string connectionId)
-        {
-            Whiteboard board = GetWhiteboard(whiteboardId);
-            await CloseWhiteboard(connectionId);
-            _openWhiteboards.TryAdd(board, new WhiteboardConnectionsWrapper());
-            if (board.WhiIstÖffentlich)
-            {
-                _openWhiteboards[board].ConnectViewer(connectionId);
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return _openWhiteboards[board.WhiIdPk].Connect(user, connectionId);
         }
 
         private async Task CloseWhiteboard(string connectionId)
         {
-            foreach(var thing in _openWhiteboards)
+            foreach (var thing in _openWhiteboards)
             {
                 thing.Value.Dissconnect(connectionId);
                 if (!thing.Value.HasConnections)
@@ -113,7 +88,7 @@ namespace Online_Whiteboard_Backend
                     }
                 }
             }
-            
+
 
         }
 
@@ -124,7 +99,12 @@ namespace Online_Whiteboard_Backend
             using (var scope = _sp.CreateScope())
             {
                 WhiteboardContext context = scope.ServiceProvider.GetRequiredService<WhiteboardContext>();
-                return context.Whiteboard.Where(w => w.WhiIdPk == id).Include(w => w.WhiBesitzerIdFkNavigation).Include(w => w.BeaNutzerIdFk).First();
+                return context.Whiteboard.Where(w => w.WhiIdPk == id)
+                    .Include(w => w.WhiBesitzerIdFkNavigation)
+                    .Include(w => w.BeaNutzerIdFk)
+                    .Include(w => w.Bild)
+                    .Include(w => w.Text)
+                    .First();
             }
         }
     }

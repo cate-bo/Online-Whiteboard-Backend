@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Online_Whiteboard_Backend.Models;
@@ -29,22 +30,42 @@ namespace Online_Whiteboard_Backend.Hubs
             //var thing = await Groups.AddToGroupAsync("v", "sd");
         }
 
-        public async Task<bool> OpenWhiteboard(int id)
+
+        [Authorize]
+        [AllowAnonymous]
+        public async Task<OpenWhiteboardResponse> OpenWhiteboard(int id)
         {
             bool success = false;
+            Whiteboard board = _context.Whiteboard.Where(w => w.WhiIdPk == id).Include(w => w.WhiBesitzerIdFkNavigation).Include(w => w.BeaNutzerIdFk).First();
             if (Context.User != null)
             {
                 string user_id = _userManager.GetUserId(Context.User);
                 AspNetUsers user = _context.AspNetUsers.Where(u => u.Id == user_id).Include(u => u.Nutzer).First();
-                success = await _statemachine.OpenWhiteboard(id, user, Context.ConnectionId);
+                if (user.Nutzer.NutIdPk == board.WhiBesitzerIdFk)
+                {
+                    return await _statemachine.ConnectToWhiteboard(board, user, Context.ConnectionId);
+                }
+                else if (board.BeaNutzerIdFk.Contains(user.Nutzer))
+                {
+                    return await _statemachine.ConnectToWhiteboard(board, user, Context.ConnectionId);
+                }
+                else if (board.WhiIstÖffentlich)
+                {
+                    return await _statemachine.ConnectToWhiteboard(board, null, Context.ConnectionId);
+                }
+                else
+                {
+                    throw new HubException();
+                }
+            }
+            else if (board.WhiIstÖffentlich)
+            {
+                return await _statemachine.ConnectToWhiteboard(board, null, Context.ConnectionId);
             }
             else
             {
-                success = await _statemachine.OpenWhiteboard(id, Context.ConnectionId);
+                throw new HubException();
             }
-            Console.WriteLine("amogus");
-            Console.WriteLine(success);
-            return success;
         }
 
         public override Task OnConnectedAsync()
