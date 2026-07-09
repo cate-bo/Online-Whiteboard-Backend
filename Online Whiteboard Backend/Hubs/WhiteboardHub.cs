@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Online_Whiteboard_Backend.Models;
 
 namespace Online_Whiteboard_Backend.Hubs
 {
-    [Authorize]
     [AllowAnonymous]
     public class WhiteboardHub : Hub
     {
@@ -33,13 +33,13 @@ namespace Online_Whiteboard_Backend.Hubs
         }
 
 
-        [Authorize]
+        //[Authorize]
         [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
         public async Task<OpenWhiteboardResponse> OpenWhiteboard(int id)
         {
-            bool success = false;
             Whiteboard board = _context.Whiteboard.Where(w => w.WhiIdPk == id).Include(w => w.WhiBesitzerIdFkNavigation).Include(w => w.BeaNutzerIdFk).First();
-            if (Context.User != null)
+            if (Context.User != null && Context.User.Identity.IsAuthenticated)
             {
                 string user_id = _userManager.GetUserId(Context.User);
                 AspNetUsers user = _context.AspNetUsers.Where(u => u.Id == user_id).Include(u => u.Nutzer).First();

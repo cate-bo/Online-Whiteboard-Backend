@@ -64,10 +64,11 @@ namespace Online_Whiteboard_Backend
             await CloseWhiteboard(connectionId);
             //_openWhiteboards.TryAdd(board, new WhiteboardConnectionsWrapper());
             board = GetWhiteboard(board.WhiIdPk);
-            if (_openWhiteboards[board.WhiIdPk] == null)
-            {
-                _openWhiteboards[board.WhiIdPk] = new WhiteboardState(board);
-            }
+            _openWhiteboards.TryAdd(board.WhiIdPk, new WhiteboardState(board));
+            //if (_openWhiteboards.)
+            //{
+            //    _openWhiteboards[board.WhiIdPk] = new WhiteboardState(board);
+            //}
 
             return _openWhiteboards[board.WhiIdPk].Connect(user, connectionId);
         }
