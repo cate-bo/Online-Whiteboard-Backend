@@ -152,6 +152,7 @@ namespace Online_Whiteboard_Backend
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.UseFileServer();
 
             app.MapControllers();
 

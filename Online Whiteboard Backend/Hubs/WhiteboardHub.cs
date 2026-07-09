@@ -6,6 +6,8 @@ using Online_Whiteboard_Backend.Models;
 
 namespace Online_Whiteboard_Backend.Hubs
 {
+    [Authorize]
+    [AllowAnonymous]
     public class WhiteboardHub : Hub
     {
         private readonly WhiteboardStatemachine _statemachine;

@@ -30,6 +30,7 @@ namespace Online_Whiteboard_Backend.Controllers
         [HttpGet]
         [Authorize]
         [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
         public async Task<ActionResult<List<IdAndNameWrapper>>> Get()
         {
             List<Whiteboard> boards = new List<Whiteboard>();
