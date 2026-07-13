@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol;
 using Online_Whiteboard_Backend.Models;
 
 namespace Online_Whiteboard_Backend.Hubs
@@ -68,6 +69,12 @@ namespace Online_Whiteboard_Backend.Hubs
             {
                 throw new HubException();
             }
+        }
+
+        public async Task<OpenWhiteboardResponse> Test2()
+        {
+            Whiteboard board = _context.Whiteboard.Where(w => w.WhiIdPk == 1).Include(w => w.WhiBesitzerIdFkNavigation).Include(w => w.BeaNutzerIdFk).First();
+            return await _statemachine.ConnectToWhiteboard(board, null, Context.ConnectionId);
         }
 
         public override Task OnConnectedAsync()

@@ -25,6 +25,13 @@ namespace Online_Whiteboard_Backend
             }
         }
 
+        public Whiteboard Whiteboard {
+            get
+            {
+                return _whiteboard;
+            }
+        }
+
         public List<string> All
         {
             get

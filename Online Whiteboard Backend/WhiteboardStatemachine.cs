@@ -84,7 +84,7 @@ namespace Online_Whiteboard_Backend
                     using (var scope = _sp.CreateScope())
                     {
                         WhiteboardContext context = scope.ServiceProvider.GetRequiredService<WhiteboardContext>();
-                        context.Update(thing.Key);
+                        context.Update(thing.Value.Whiteboard);
                         await context.SaveChangesAsync();
                     }
                 }
