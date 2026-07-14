@@ -5,7 +5,7 @@ namespace Online_Whiteboard_Backend
     public class OpenWhiteboardResponse
     {
 
-        public OpenWhiteboardResponse(Whiteboard board, List<UserWrapper> currentUsers)
+        public OpenWhiteboardResponse(Whiteboard board, List<UserWrapper> currentUsers, int lastUpdate)
         {
             Id = board.WhiIdPk;
             OwnerId = board.WhiBesitzerIdFk;
@@ -18,6 +18,7 @@ namespace Online_Whiteboard_Backend
                 Texts.Add(new TextWrapper(text));
             }
             Images = new List<ImageWrapper>();
+            LastUpdate = lastUpdate;
         }
 
         public int Id { get; set; }
@@ -27,5 +28,6 @@ namespace Online_Whiteboard_Backend
         public List<UserWrapper> CurrentEditors { get; set; }
         public List<TextWrapper> Texts { get; set; }
         public List<ImageWrapper> Images { get; set; }
+        public int LastUpdate { get; set; }
     }
 }

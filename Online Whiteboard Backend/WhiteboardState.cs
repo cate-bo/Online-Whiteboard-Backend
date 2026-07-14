@@ -7,12 +7,14 @@ namespace Online_Whiteboard_Backend
         private Whiteboard _whiteboard;
         private Dictionary<string, UserWrapper> _editors;
         private List<string> _viewers;
+        private int _lastUpdate;
 
         public WhiteboardState(Whiteboard whiteboard)
         {
             _editors = new Dictionary<string, UserWrapper>();
             _viewers = new List<string>();
             _whiteboard = whiteboard;
+            _lastUpdate = 0;
         }
 
         public bool HasConnections
@@ -70,7 +72,7 @@ namespace Online_Whiteboard_Backend
                     _editors.Add(connectionId, userWrapper);
                 }
             }
-            return new OpenWhiteboardResponse(_whiteboard, CurrentEditors);
+            return new OpenWhiteboardResponse(_whiteboard, CurrentEditors, _lastUpdate);
         }
 
         public void Dissconnect(string id)
