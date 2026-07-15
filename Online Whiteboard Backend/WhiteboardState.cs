@@ -1,4 +1,9 @@
-﻿using Online_Whiteboard_Backend.Models;
+﻿using NuGet.Protocol;
+using Online_Whiteboard_Backend.Models;
+using System.Buffers.Text;
+using System.Drawing;
+using System.Text;
+using System.Text.Json;
 
 namespace Online_Whiteboard_Backend
 {
@@ -7,14 +12,14 @@ namespace Online_Whiteboard_Backend
         private Whiteboard _whiteboard;
         private Dictionary<string, UserWrapper> _editors;
         private List<string> _viewers;
-        private int _lastUpdate;
+        private Bitmap _drawing;
 
         public WhiteboardState(Whiteboard whiteboard)
         {
             _editors = new Dictionary<string, UserWrapper>();
             _viewers = new List<string>();
             _whiteboard = whiteboard;
-            _lastUpdate = 0;
+            _drawing = Bitmap.FromStream(new MemoryStream(_whiteboard.WhiZeichnung)) as Bitmap;
         }
 
         public bool HasConnections
@@ -72,7 +77,10 @@ namespace Online_Whiteboard_Backend
                     _editors.Add(connectionId, userWrapper);
                 }
             }
-            return new OpenWhiteboardResponse(_whiteboard, CurrentEditors, _lastUpdate);
+            var stream = new MemoryStream();
+            _drawing.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+            var thing = Convert.ToBase64String(stream.ToArray());
+            return new OpenWhiteboardResponse(_whiteboard, thing, CurrentEditors);
         }
 
         public void Dissconnect(string id)
