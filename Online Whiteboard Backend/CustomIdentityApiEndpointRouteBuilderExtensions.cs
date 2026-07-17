@@ -83,6 +83,7 @@ namespace Online_Whiteboard_Backend
                 await userStore.SetUserNameAsync(user, email, CancellationToken.None);
                 await emailStore.SetEmailAsync(user, email, CancellationToken.None);
                 var result = await userManager.CreateAsync(user, registration.Password);
+                int id = 0;
                 //create Nutzer if identity creation succeeded
                 if (result.Succeeded)
                 {
@@ -95,6 +96,7 @@ namespace Online_Whiteboard_Backend
                         nutzer.NutAspUserIdFk = await userStore.GetUserIdAsync(user, CancellationToken.None);
                         whiteboard_context.Add(nutzer);
                         await whiteboard_context.SaveChangesAsync();
+                        id = nutzer.NutIdPk;
                     }catch (Exception ex)
                     {
                         whiteboard_context.Remove(nutzer);
@@ -107,6 +109,7 @@ namespace Online_Whiteboard_Backend
                     return CreateValidationProblem(result);
                 }
 
+                context.Response.Headers.Add("id", id.ToString());
                 context.Response.Headers.Add("name", registration.Username);
 
                 //await SendConfirmationEmailAsync(user, userManager, context, email);
@@ -127,7 +130,7 @@ namespace Online_Whiteboard_Backend
                 UserManager<TUser> usermanager = sp.GetRequiredService<UserManager<TUser>>();
 
                 var context = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;
-
+                var dbContext = sp.GetRequiredService<WhiteboardContext>();
 
                 TUser? user = await usermanager.FindByEmailAsync(login.Email);
 
@@ -136,6 +139,9 @@ namespace Online_Whiteboard_Backend
                     return TypedResults.Problem();
                 }
 
+                var nutzer = dbContext.Nutzer.Where(n => n.NutAspUserIdFk == (user as IdentityUser).Id).First();
+
+                context.Response.Headers.Add("id", nutzer.NutIdPk.ToString());
                 context.Response.Headers.Add("name", (user as IdentityUser).UserName);
 
 
