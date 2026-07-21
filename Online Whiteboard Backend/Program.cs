@@ -46,6 +46,55 @@ namespace Online_Whiteboard_Backend
             //}).AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddHttpContextAccessor();
 
+            
+
+
+
+            
+
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                //options.SchemeMap["Bearer"]
+                //options.DefaultAuthenticateScheme = "Bearer";
+            }).AddJwtBearer(options =>
+            {
+
+                //options.Authority = "local auth";
+
+                //options.ForwardSignIn = 
+                //options.ForwardDefault = "BearerToken";
+
+                //options.Events = new JwtBearerEvents
+                //{
+                //    OnMessageReceived = context =>
+                //    {
+                //        for (int i = 0; i < 10; i++)
+                //        {
+                //            Console.WriteLine("jbe");
+                //        }
+                //        var accessToken = context.Request.Query["access_token"];
+                //        if (!string.IsNullOrEmpty(accessToken) && context.HttpContext.Request.Path.StartsWithSegments(hubPath))
+                //        {
+                //            context.Token = accessToken;
+                //        }
+                //        return Task.CompletedTask;
+                //    }
+                //};
+                options.Validate();
+
+            });
+
+
+            builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => {
+                options.User.RequireUniqueEmail = true;
+            })
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddSignInManager<CustomSignInManager<IdentityUser>>();
+
             builder.Services.AddAuthorization(options =>
             {
                 options.AddPolicy("optionalAuthentication", policy =>
@@ -56,30 +105,6 @@ namespace Online_Whiteboard_Backend
 
             builder.Services.AddSingleton<IAuthorizationHandler, OptionalAuthenticationHandler>();
 
-            builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.User.RequireUniqueEmail = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddSignInManager<CustomSignInManager<IdentityUser>>();
-
-
-            builder.Services.AddAuthentication(options =>
-            {
-                //options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                //options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = context =>
-                    {
-                        var accessToken = context.Request.Query["access_token"];
-                        if (!string.IsNullOrEmpty(accessToken) && context.HttpContext.Request.Path.StartsWithSegments(hubPath))
-                        {
-                            context.Token = accessToken;
-                        }
-                        return Task.CompletedTask;
-                    }
-                };
-            });
 
             //builder.Services.AddAuthenticationCore();
 
@@ -128,6 +153,7 @@ namespace Online_Whiteboard_Backend
 
 
             app.MapCustomIdentityApi<IdentityUser>();
+            //app.MapIdentityApi<IdentityUser>();
 
             app.MapPost("/logout", async (SignInManager<IdentityUser> signInManager, [FromBody] object empty) =>
             {

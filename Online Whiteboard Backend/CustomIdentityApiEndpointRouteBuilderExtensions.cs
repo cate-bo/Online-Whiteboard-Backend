@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -49,7 +50,7 @@ namespace Online_Whiteboard_Backend
             ArgumentNullException.ThrowIfNull(endpoints);
 
             var timeProvider = endpoints.ServiceProvider.GetRequiredService<TimeProvider>();
-            var bearerTokenOptions = endpoints.ServiceProvider.GetRequiredService<IOptionsMonitor<BearerTokenOptions>>();
+            var bearerTokenOptions = endpoints.ServiceProvider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>();
             var emailSender = endpoints.ServiceProvider.GetRequiredService<IEmailSender<TUser>>();
             var linkGenerator = endpoints.ServiceProvider.GetRequiredService<LinkGenerator>();
 
@@ -196,25 +197,25 @@ namespace Online_Whiteboard_Backend
                 return TypedResults.Empty;
             });
 
-            routeGroup.MapPost("/refresh", async Task<Results<Ok<AccessTokenResponse>, UnauthorizedHttpResult, SignInHttpResult, ChallengeHttpResult>>
-                ([FromBody] RefreshRequest refreshRequest, [FromServices] IServiceProvider sp) =>
-            {
-                var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
-                var refreshTokenProtector = bearerTokenOptions.Get(IdentityConstants.BearerScheme).RefreshTokenProtector;
-                var refreshTicket = refreshTokenProtector.Unprotect(refreshRequest.RefreshToken);
+            //routeGroup.MapPost("/refresh", async Task<Results<Ok<AccessTokenResponse>, UnauthorizedHttpResult, SignInHttpResult, ChallengeHttpResult>>
+            //    ([FromBody] RefreshRequest refreshRequest, [FromServices] IServiceProvider sp) =>
+            //{
+            //    var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
+            //    var refreshTokenProtector = bearerTokenOptions.Get(IdentityConstants.BearerScheme).RefreshTokenProtector;
+            //    var refreshTicket = refreshTokenProtector.Unprotect(refreshRequest.RefreshToken);
 
-                // Reject the /refresh attempt with a 401 if the token expired or the security stamp validation fails
-                if (refreshTicket?.Properties?.ExpiresUtc is not { } expiresUtc ||
-                    timeProvider.GetUtcNow() >= expiresUtc ||
-                    await signInManager.ValidateSecurityStampAsync(refreshTicket.Principal) is not TUser user)
+            //    // Reject the /refresh attempt with a 401 if the token expired or the security stamp validation fails
+            //    if (refreshTicket?.Properties?.ExpiresUtc is not { } expiresUtc ||
+            //        timeProvider.GetUtcNow() >= expiresUtc ||
+            //        await signInManager.ValidateSecurityStampAsync(refreshTicket.Principal) is not TUser user)
 
-                {
-                    return TypedResults.Challenge();
-                }
+            //    {
+            //        return TypedResults.Challenge();
+            //    }
 
-                var newPrincipal = await signInManager.CreateUserPrincipalAsync(user);
-                return TypedResults.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);
-            });
+            //    var newPrincipal = await signInManager.CreateUserPrincipalAsync(user);
+            //    return TypedResults.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);
+            //});
 
             routeGroup.MapGet("/confirmEmail", async Task<Results<ContentHttpResult, UnauthorizedHttpResult>>
                 ([FromQuery] string userId, [FromQuery] string code, [FromQuery] string? changedEmail, [FromServices] IServiceProvider sp) =>

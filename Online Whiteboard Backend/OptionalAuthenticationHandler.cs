@@ -6,11 +6,13 @@ namespace Online_Whiteboard_Backend
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, OptionalAuthenticationRequirement requirement)
         {
-            //Thread.CurrentPrincipal = context.
+            Thread.CurrentPrincipal = context.User;
             //if (context.User != null)
             //{
             //    context.User.
             //}
+            //context.User.Identity.
+
             context.Succeed(requirement);
             return Task.CompletedTask;
         }
