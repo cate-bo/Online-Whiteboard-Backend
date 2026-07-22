@@ -9,9 +9,11 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Online_Whiteboard_Backend.Hubs;
 using Online_Whiteboard_Backend.Models;
+using System.Text;
 
 namespace Online_Whiteboard_Backend
 {
@@ -46,54 +48,41 @@ namespace Online_Whiteboard_Backend
             //}).AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddHttpContextAccessor();
 
-            
 
 
+            //builder.Services.AddIdentityApiEndpoints<IdentityUser>(options =>
+            //{
+            //    options.User.RequireUniqueEmail = true;
+            //})
+            //    .AddEntityFrameworkStores<ApplicationDbContext>()
+            //    .AddSignInManager<CustomSignInManager<IdentityUser>>();
 
-            
+            builder.Services.AddIdentityCore<IdentityUser>().AddApiEndpoints().AddEntityFrameworkStores<ApplicationDbContext>().AddSignInManager<CustomSignInManager<IdentityUser>>();
 
 
-            builder.Services.AddAuthentication(options =>
+            builder.Services.AddAuthentication(BearerTokenDefaults.AuthenticationScheme).AddBearerToken(options =>
             {
-                options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                //options.SchemeMap["Bearer"]
-                //options.DefaultAuthenticateScheme = "Bearer";
-            }).AddJwtBearer(options =>
-            {
+                options.Events = new BearerTokenEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
 
-                //options.Authority = "local auth";
-
-                //options.ForwardSignIn = 
-                //options.ForwardDefault = "BearerToken";
-
-                //options.Events = new JwtBearerEvents
-                //{
-                //    OnMessageReceived = context =>
-                //    {
-                //        for (int i = 0; i < 10; i++)
-                //        {
-                //            Console.WriteLine("jbe");
-                //        }
-                //        var accessToken = context.Request.Query["access_token"];
-                //        if (!string.IsNullOrEmpty(accessToken) && context.HttpContext.Request.Path.StartsWithSegments(hubPath))
-                //        {
-                //            context.Token = accessToken;
-                //        }
-                //        return Task.CompletedTask;
-                //    }
-                //};
-                options.Validate();
-
+                        // If the request is for our hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments(hubPath)))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
 
-            builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => {
-                options.User.RequireUniqueEmail = true;
-            })
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddSignInManager<CustomSignInManager<IdentityUser>>();
+
 
             builder.Services.AddAuthorization(options =>
             {
@@ -159,6 +148,7 @@ namespace Online_Whiteboard_Backend
             {
                 if (empty != null)
                 {
+                    signInManager.AuthenticationScheme = BearerTokenDefaults.AuthenticationScheme;
                     await signInManager.SignOutAsync();
                     return Results.Ok();
                 }

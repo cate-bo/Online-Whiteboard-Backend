@@ -10,7 +10,7 @@ using Online_Whiteboard_Backend;
 namespace Online_Whiteboard_Backend.Hubs
 {
 
-    [Authorize]
+    //[Authorize]
     //[AllowAnonymous]
     public class WhiteboardHub : Hub
     {
@@ -36,10 +36,11 @@ namespace Online_Whiteboard_Backend.Hubs
             //var thing = await Groups.AddToGroupAsync("v", "sd");
         }
 
-        [Authorize]
+        //[Authorize]
+        //[AllowAnonymous]
         //[Authorize("optionalAuthentication")]
         //[IgnoreAntiforgeryToken]
-        public async Task<OpenWhiteboardResponse> OpenWhiteboard(int id)
+        public async Task<string> OpenWhiteboard(int id)
         {
             Whiteboard board = _context.Whiteboard.Where(w => w.WhiIdPk == id).Include(w => w.WhiBesitzerIdFkNavigation).Include(w => w.BeaNutzerIdFk).First();
             try
@@ -50,15 +51,15 @@ namespace Online_Whiteboard_Backend.Hubs
                 AspNetUsers user = _context.AspNetUsers.Where(u => u.Id == user_id).Include(u => u.Nutzer).First();
                 if (user.Nutzer.NutIdPk == board.WhiBesitzerIdFk)
                 {
-                    return await _statemachine.ConnectToWhiteboard(board, user, Context.ConnectionId);
+                    return (await _statemachine.ConnectToWhiteboard(board, user, Context.ConnectionId)).ToJson();
                 }
                 else if (board.BeaNutzerIdFk.Contains(user.Nutzer))
                 {
-                    return await _statemachine.ConnectToWhiteboard(board, user, Context.ConnectionId);
+                    return (await _statemachine.ConnectToWhiteboard(board, user, Context.ConnectionId)).ToJson();
                 }
                 else if (board.WhiIstÖffentlich)
                 {
-                    return await _statemachine.ConnectToWhiteboard(board, null, Context.ConnectionId);
+                    return (await _statemachine.ConnectToWhiteboard(board, null, Context.ConnectionId)).ToJson();
                 }
                 else
                 {
@@ -68,15 +69,15 @@ namespace Online_Whiteboard_Backend.Hubs
             {
                 if (board.WhiIstÖffentlich)
                 {
-                    return await _statemachine.ConnectToWhiteboard(board, null, Context.ConnectionId);
+                    return (await _statemachine.ConnectToWhiteboard(board, null, Context.ConnectionId)).ToJson();
                 }
                 else
                 {
                     throw new HubException();
                 }
             }
-            
-            
+
+            throw new HubException();
         }
 
         public async Task<OpenWhiteboardResponse> Test2()
@@ -93,6 +94,7 @@ namespace Online_Whiteboard_Backend.Hubs
         }
         public override Task OnDisconnectedAsync(Exception? exception)
         {
+            _statemachine.CloseWhiteboard(Context.ConnectionId);
             return base.OnDisconnectedAsync(exception);
         }
     }

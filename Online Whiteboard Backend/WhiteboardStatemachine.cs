@@ -73,7 +73,7 @@ namespace Online_Whiteboard_Backend
             return _openWhiteboards[board.WhiIdPk].Connect(user, connectionId);
         }
 
-        private async Task CloseWhiteboard(string connectionId)
+        public async Task CloseWhiteboard(string connectionId)
         {
             foreach (var thing in _openWhiteboards)
             {

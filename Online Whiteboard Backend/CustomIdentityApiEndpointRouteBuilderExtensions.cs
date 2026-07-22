@@ -118,7 +118,7 @@ namespace Online_Whiteboard_Backend
 
                 ////var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
                 ////var isPersistent = (useCookies == true) && (useSessionCookies != true);
-                signInManager.AuthenticationScheme =/* useCookieScheme ? IdentityConstants.ApplicationScheme : */IdentityConstants.BearerScheme;
+                signInManager.AuthenticationScheme =/* useCookieScheme ? IdentityConstants.ApplicationScheme : */BearerTokenDefaults.AuthenticationScheme;
 
                 await signInManager.PasswordSignInAsync(registration.Email, registration.Password, false, lockoutOnFailure: false);
                 return TypedResults.Empty;
@@ -151,7 +151,7 @@ namespace Online_Whiteboard_Backend
 
                 ////var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
                 ////var isPersistent = (useCookies == true) && (useSessionCookies != true);
-                signInManager.AuthenticationScheme =/* useCookieScheme ? IdentityConstants.ApplicationScheme : */IdentityConstants.BearerScheme;
+                signInManager.AuthenticationScheme =/* useCookieScheme ? IdentityConstants.ApplicationScheme : */BearerTokenDefaults.AuthenticationScheme;
 
                 var result = await signInManager.PasswordSignInAsync(login.Email, login.Password, false, lockoutOnFailure: false);
                 

@@ -72,8 +72,8 @@ namespace Online_Whiteboard_Backend
                 if(user.Nutzer.NutIdPk == _whiteboard.WhiBesitzerIdFk || _whiteboard.BeaNutzerIdFk.Contains(user.Nutzer))
                 {
                     UserWrapper userWrapper = new UserWrapper();
-                    userWrapper.Id = user.Nutzer.NutIdPk;
-                    userWrapper.Name = user.Nutzer.NutAnzeigename;
+                    userWrapper.id = user.Nutzer.NutIdPk;
+                    userWrapper.name = user.Nutzer.NutAnzeigename;
                     _editors.Add(connectionId, userWrapper);
                 }
             }
